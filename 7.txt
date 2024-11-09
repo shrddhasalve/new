@@ -1,0 +1,109 @@
+7
+Concatenate
+
+
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface Concatenate extends Remote {
+    String concatenateStrings(String str1, String str2) throws RemoteException;
+}
+
+
+
+ConcatenateClient
+
+
+
+import java.rmi.Naming;
+
+public class ConcatenateClient {
+    public static void main(String[] args) {
+        try {
+            // Look up the remote object from the RMI registry
+            Concatenate stub = (Concatenate) Naming.lookup("rmi://localhost:1099/ConcatenateService");
+
+            // Call the remote method
+            String result = stub.concatenateStrings("Hello, ", "World!");
+            System.out.println("Concatenated String: " + result);
+        } catch (Exception e) {
+            System.out.println("Client exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+ConcatenateImpl
+
+
+
+
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+
+public class ConcatenateImpl extends UnicastRemoteObject implements Concatenate {
+    protected ConcatenateImpl() throws RemoteException {
+        super();
+    }
+
+    @Override
+    public String concatenateStrings(String str1, String str2) throws RemoteException {
+        return str1 + str2;
+    }
+}
+
+
+
+ConcatenateServer
+
+
+import java.rmi.Naming;
+import java.rmi.registry.LocateRegistry;
+
+public class ConcatenateServer {
+    public static void main(String[] args) {
+        try {
+            // Start the RMI registry on port 1099
+            LocateRegistry.createRegistry(1099);
+
+            // Create an instance of ConcatenateImpl and bind it to the RMI registry
+            ConcatenateImpl obj = new ConcatenateImpl();
+            Naming.rebind("rmi://localhost:1099/ConcatenateService", obj);
+
+            System.out.println("Concatenate Server is ready.");
+        } catch (Exception e) {
+            System.out.println("Server exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+}
+
+
+--------------------------------------------------------------------------------------------------
+
+Steps to execute the following program - 
+
+1. JDK installation if not installed already
+sudo apt update
+sudo apt install openjdk-11-jdk
+java -version
+2. Compile files on terminal 1
+   javac Concatenate.java ConcatenateClient.java ConcatenateImpl.java ConcatenateServer.java
+3. Open a new terminal and give command
+   rmiregistry 1099
+4. Open a new terminal
+   java ConcatenateServer
+   Expected output - Concatenate Server is ready.
+If the error comes -
+   We have to kill this port
+   sudo lsof -i :1099
+   sudo kill <PID>
+5. Open a new terminal 
+   java ConcatenateClient
+Expected output - Concatenated String: Hello, World!
+
+

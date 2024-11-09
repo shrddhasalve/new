@@ -1,0 +1,140 @@
+Problem Statement 10
+
+
+1.create folder pdc10
+2.cd pdc10
+3.create the below files
+
+1.// VowelService.java
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface VowelService extends Remote {
+    // Method to check if two strings have the same number of vowels
+    boolean hasEqualVowels(String str1, String str2) throws RemoteException;
+}
+
+2.// VowelServiceImpl.java
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
+
+public class VowelServiceImpl extends UnicastRemoteObject implements VowelService {
+    // Constructor
+    protected VowelServiceImpl() throws RemoteException {
+        super();
+    }
+
+    // Method to check if two strings have the same number of vowels
+    @Override
+    public boolean hasEqualVowels(String str1, String str2) throws RemoteException {
+        return countVowels(str1) == countVowels(str2);
+    }
+
+    // Helper method to count vowels in a string
+    private int countVowels(String str) {
+        int count = 0;
+        for (char c : str.toLowerCase().toCharArray()) {
+            if ("aeiou".indexOf(c) != -1) {
+                count++;
+            }
+        }
+        return count;
+    }
+}
+
+3.// RMIServer.java
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class RMIServer {
+    public static void main(String[] args) {
+        try {
+            // Create an instance of VowelService
+            VowelService service = new VowelServiceImpl();
+
+            // Create and bind the registry on port 1099
+            Registry registry = LocateRegistry.createRegistry(1099);
+            registry.rebind("VowelService", service);
+
+            System.out.println("RMI Server is running...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+4.// RMIClient.java
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.Scanner;
+
+public class RMIClient {
+    public static void main(String[] args) {
+        try {
+            // Locate the RMI registry
+            Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+
+            // Lookup the remote VowelService
+            VowelService service = (VowelService) registry.lookup("VowelService");
+
+            // Take user input for two strings
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter the first string: ");
+            String str1 = scanner.nextLine();
+            System.out.print("Enter the second string: ");
+            String str2 = scanner.nextLine();
+            scanner.close();
+
+            // Call the hasEqualVowels method remotely
+            boolean result = service.hasEqualVowels(str1, str2);
+            if (result) {
+                System.out.println("Both strings contain an equal number of vowels.");
+            } else {
+                System.out.println("The strings do not contain an equal number of vowels.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+4:compile all files:  javac *.java
+
+5.run command:  rmiregistry &
+
+6: java RMIServer 
+
+		if it shows error:
+		linux@linux-ThinkCentre-M720s:~/Dhaval$ java RMIServer
+java.rmi.server.ExportException: Port already in use: 1099; nested exception is: 
+	java.net.BindException: Address already in use
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.listen(TCPTransport.java:346)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.exportObject(TCPTransport.java:243)
+	at java.rmi/sun.rmi.transport.tcp.TCPEndpoint.exportObject(TCPEndpoint.java:415)
+	at java.rmi/sun.rmi.transport.LiveRef.exportObject(LiveRef.java:147)
+	at java.rmi/sun.rmi.server.UnicastServerRef.exportObject(UnicastServerRef.java:235)
+	at java.rmi/sun.rmi.registry.RegistryImpl.setup(RegistryImpl.java:223)
+	at java.rmi/sun.rmi.registry.RegistryImpl.<init>(RegistryImpl.java:208)
+	at java.rmi/java.rmi.registry.LocateRegistry.createRegistry(LocateRegistry.java:203)
+	at RMIServer.main(RMIServer.java:11)
+Caused by: java.net.BindException: Address already in use
+	at java.base/sun.nio.ch.Net.bind0(Native Method)
+	at java.base/sun.nio.ch.Net.bind(Net.java:555)
+	at java.base/sun.nio.ch.Net.bind(Net.java:544)
+	at java.base/sun.nio.ch.NioSocketImpl.bind(NioSocketImpl.java:648)
+	at java.base/java.net.ServerSocket.bind(ServerSocket.java:388)
+	at java.base/java.net.ServerSocket.<init>(ServerSocket.java:274)
+	at java.base/java.net.ServerSocket.<init>(ServerSocket.java:167)
+	at java.rmi/sun.rmi.transport.tcp.TCPDirectSocketFactory.createServerSocket(TCPDirectSocketFactory.java:45)
+	at java.rmi/sun.rmi.transport.tcp.TCPEndpoint.newServerSocket(TCPEndpoint.java:673)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.listen(TCPTransport.java:335)
+	... 8 more
+^Clinux@linux-ThinkCentre-M720s:~/Dhaval$ sudo lsof -i :1099
+[sudo] password for linux: 
+COMMAND    PID  USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+rmiregist 3186 linux    6u  IPv6  53755      0t0  TCP *:rmiregistry (LISTEN)
+linux@linux-ThinkCentre-M720s:~/Dhaval$ sudo kill 3186
+linux@linux-ThinkCentre-M720s:~/Dhaval$ java RMIServer
+
+		
+7: In another terminal :java RMIClient

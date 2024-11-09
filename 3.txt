@@ -1,0 +1,69 @@
+3
+server
+import java.io.*;
+import java.net.*;
+
+public class server {
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(1234)) {
+            System.out.println("Server is listening on port 1234");
+            Socket socket = serverSocket.accept();
+            DataInputStream input = new DataInputStream(socket.getInputStream());
+            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+
+            int number = input.readInt();
+            int square = number * number;
+            output.writeInt(square);
+
+            socket.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+}
+
+client
+import java.io.*;
+import java.net.*;
+
+public class client {
+    public static void main(String[] args) {
+        try (Socket socket = new Socket("localhost", 1234)) {
+            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+            DataInputStream input = new DataInputStream(socket.getInputStream());
+
+            output.writeInt(5);
+            int square = input.readInt();
+
+            System.out.println("Square of 5 is: " + square);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+}
+
+javac server.java client.java
+java server
+java client
+
+--------------------------------------------------------------------------------------------------
+
+Without installation -
+
+sudo apt update
+sudo apt install openjdk-11-jdk
+java -version
+
+Following steps are common now (With or without installation) - 
+
+1. Make two files - server.java and client.java
+2. Copy the above code
+3. Open terminal window1 
+   Give command 
+   javac server.java client.java
+4. Open terminal window2
+   Give command
+   java server
+5. Open terminal window3
+   Give command
+   java client

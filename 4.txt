@@ -1,0 +1,68 @@
+4
+Broker
+import java.util.ArrayList;
+import java.util.List;
+
+class Broker {
+    List<Subscriber> subscribers = new ArrayList<>();
+
+    void subscribe(Subscriber subscriber) {
+        subscribers.add(subscriber);
+    }
+
+    void notifySubscribers(String message) {
+        for (Subscriber subscriber : subscribers) {
+            subscriber.update(message);
+        }
+    }
+}
+
+Message
+class Message {
+    String content;
+    Message(String content) { this.content = content; }
+}
+
+Publisher
+class Publisher {
+    Broker broker;
+    Publisher(Broker broker) { this.broker = broker; }
+
+    void publish(String content) {
+        broker.notifySubscribers(content);
+    }
+}
+
+PublisherSubscriberExample
+public class PublishSubscribeExample {
+    public static void main(String[] args) {
+        Broker broker = new Broker();
+
+        broker.subscribe(msg -> System.out.println("Subscriber 1 received: " + msg));
+        broker.subscribe(msg -> System.out.println("Subscriber 2 received: " + msg));
+
+        Publisher publisher = new Publisher(broker);
+        publisher.publish("Hello, Subscribers!");
+        publisher.publish("Another message!");
+    }
+}
+
+Subscriber
+interface Subscriber {
+    void update(String message);
+}
+
+--------------------------------------------------------------------------------------------------
+
+1. Create 5 files by copy pasting above code.
+Broker.java
+Message.java
+Publisher.java
+PublishSubscribeExample.java (contains the main method to run the program)
+Subscriber.java (interface)
+
+2. Compile the Java Code
+javac Broker.java Message.java Publisher.java PublishSubscribeExample.java Subscriber.java
+
+3. Run the Program
+java PublishSubscribeExample

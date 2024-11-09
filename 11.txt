@@ -1,0 +1,92 @@
+ProblemStatement 11:
+
+
+
+1.create folderpdc11
+2.open terminal:-cd pdc11
+3.create below files
+
+   1:// PowerService.java
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface PowerService extends Remote {
+    // Method to compute a^b
+    double power(int a, int b) throws RemoteException;
+}
+
+
+2:// PowerServiceImpl.java
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
+
+public class PowerServiceImpl extends UnicastRemoteObject implements PowerService {
+    // Constructor
+    protected PowerServiceImpl() throws RemoteException {
+        super();
+    }
+
+    // Method to compute a^b
+    @Override
+    public double power(int a, int b) throws RemoteException {
+        return Math.pow(a, b);
+    }
+}
+
+3:// RMIServer.java
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class RMIServer {
+    public static void main(String[] args) {
+        try {
+            // Create an instance of PowerService
+            PowerService service = new PowerServiceImpl();
+
+            // Create and bind the registry on port 1099
+            Registry registry = LocateRegistry.createRegistry(1099);
+            registry.rebind("PowerService", service);
+
+            System.out.println("RMI Server is running...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+4:// RMIClient.java
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.Scanner;
+
+public class RMIClient {
+    public static void main(String[] args) {
+        try {
+            // Locate the RMI registry
+            Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+
+            // Lookup the remote PowerService
+            PowerService service = (PowerService) registry.lookup("PowerService");
+
+            // Take user input for a and b
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter the base (a): ");
+            int a = scanner.nextInt();
+            System.out.print("Enter the exponent (b): ");
+            int b = scanner.nextInt();
+            scanner.close();
+
+            // Call the power method remotely
+            double result = service.power(a, b);
+            System.out.println("Result of " + a + "^" + b + " = " + result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+4:javac PowerService.java PowerServiceImpl.java RMIServer.java RMIClient.java
+
+5: rmiregistry &
+6:java RMIServer
+7:in another terminal run client: java RMIClient

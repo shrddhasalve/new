@@ -1,0 +1,48 @@
+pwd
+nano my_openmp_program.c
+#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    #pragma omp parallel
+    {
+        printf("Hello from thread %d out of %d threads.\n", omp_get_thread_num(), omp_get_num_threads());
+    }
+    return 0;
+}
+gcc -fopenmp my_openmp_program.c -o my_openmp_program
+./my_openmp_program
+export OMP_NUM_THREADS=4
+./my_openmp_program
+
+
+
+
+#include<stdio.h>
+#include<omp.h>
+int main(){
+int n=1000;
+int sum=0;
+int i;
+#pragma omp parallel for reduction(+:sum)
+for(i=1;i<=n;i++){
+sum+=i;
+}
+printf("Sum of first %d numbers is:%d\n",n,sum);
+return 0;
+}
+
+gcc -fopenmp 1.c -o 1
+./1
+
+
+----------------------------------------------------------------------------------------------------
+
+Steps to perform this assignment - 
+
+1. Copy paste above code in notepad
+2. Save the code with name 1.c
+3. Open terminal
+4. Give command - 
+   gcc -fopenmp 1.c -o 1
+   ./1

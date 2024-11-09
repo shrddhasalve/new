@@ -1,0 +1,91 @@
+
+8) RMI Substring
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface SubstringService extends Remote {
+    // Remote method for checking if str1 is a substring of str2
+    String checkSubstring(String str1, String str2) throws RemoteException;
+}
+
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class SubstringServer extends UnicastRemoteObject implements SubstringService {
+
+    // Constructor
+    public SubstringServer() throws RemoteException {
+        super();
+    }
+
+    // Implementation of the remote method
+    @Override
+    public String checkSubstring(String str1, String str2) throws RemoteException {
+        if (str2.contains(str1)) {
+            return "\"" + str1 + "\" is a substring of \"" + str2 + "\"";
+        } else {
+            return "\"" + str1 + "\" is NOT a substring of \"" + str2 + "\"";
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Create an instance of SubstringServer
+            SubstringServer server = new SubstringServer();
+
+            // Bind the remote object to the RMI registry
+            Registry registry = LocateRegistry.createRegistry(1099); // Default RMI port
+            registry.rebind("SubstringService", server);
+
+            System.out.println("SubstringServer is running and waiting for client requests...");
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class SubstringClient {
+    public static void main(String[] args) {
+        try {
+            // Connect to the RMI registry on localhost
+            Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+
+            // Lookup the remote object in the registry
+            SubstringService service = (SubstringService) registry.lookup("SubstringService");
+
+            // Define the two strings to check
+            String str1 = "Hello";
+            String str2 = "Hello, world!";
+
+            // Call the remote method and print the result
+            String result = service.checkSubstring(str1, str2);
+            System.out.println("Result from server: " + result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+--------------------------------------------------------------------------------------------------
+
+
+javac SubstringService.java SubstringServer.java SubstringClient.java
+
+rmiregistry &
+
+java SubstringServer
+
+java SubstringClient
+
+--------------------------------------------------------------------------------------------------
+

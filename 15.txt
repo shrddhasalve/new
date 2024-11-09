@@ -1,0 +1,70 @@
+Create file: fact.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+
+// Function to calculate factorial
+long long factorial(int n) {
+    long long fact = 1;
+    for (int i = 1; i <= n; i++) {
+        fact *= i;
+    }
+    return fact;
+}
+
+int main(int argc, char *argv[]) {
+    int rank, size;
+    int number;
+    long long result;
+    
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    // Check if we have exactly two processes
+    if (size != 2) {
+        fprintf(stderr, "This application requires exactly two processes.\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    // Rank 0: Client sends the number to the server
+    if (rank == 0) {
+        // Ask the user to input a number
+        printf("Enter an integer to calculate its factorial: ");
+        scanf("%d", &number);
+
+        // Send the number to the server (Rank 1)
+        MPI_Send(&number, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+        printf("Client sent: %d\n", number);
+
+        // Receive the result (factorial) from the server
+        MPI_Recv(&result, 1, MPI_LONG_LONG, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Client received factorial: %lld\n", result);
+    }
+
+    // Rank 1: Server receives the number, calculates factorial, and sends back the result
+    else if (rank == 1) {
+        // Receive the number from the client
+        MPI_Recv(&number, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Server received: %d\n", number);
+
+        // Calculate the factorial of the received number
+        result = factorial(number);
+
+        // Send the result back to the client
+        MPI_Send(&result, 1, MPI_LONG_LONG, 0, 0, MPI_COMM_WORLD);
+        printf("Server computed factorial: %lld\n", result);
+    }
+
+    // Finalize MPI
+    MPI_Finalize();
+    return 0;
+}
+
+
+Compile: mpicc -o fact fact.c
+Run: mpirun -np 2 ./fact 
+
+Enter a number on terminal after run command

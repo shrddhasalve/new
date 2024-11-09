@@ -1,0 +1,83 @@
+#include <mpi.h>
+#include <stdio.h>
+#include <string.h>
+
+// Function to reverse a string
+void reverse_string(char *str) {
+    int n = strlen(str);
+    for (int i = 0; i < n / 2; i++) {
+        char temp = str[i];
+        str[i] = str[n - i - 1];
+        str[n - i - 1] = temp;
+    }
+}
+
+int main(int argc, char *argv[]) {
+    int world_rank, world_size;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Ensure there are at least 2 processes
+    if (world_size < 2) {
+        fprintf(stderr, "World size must be greater than 1 for %s\n", argv[0]);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    if (world_rank == 0) {
+        // Client (rank 0)
+        char message[100] = "Hello from Client!";
+        printf("Client sending message: %s\n", message);
+
+        // Send message to server (rank 1)
+        MPI_Send(message, strlen(message) + 1, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+
+        // Receive reversed message from server
+        MPI_Recv(message, 100, MPI_CHAR, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Client received the reversed message: %s\n", message);
+    }
+    else if (world_rank == 1) {
+            // Server (rank 1)
+        char message[100];
+
+        // Receive message from client
+        MPI_Recv(message, 100, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Server received message: %s\n", message);
+
+        // Reverse the string
+        reverse_string(message);
+
+        // Send reversed message back to client
+        MPI_Send(message, strlen(message) + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+    }
+
+    MPI_Finalize();
+    return 0;
+}
+
+mpicc 2.c -o 2
+mpirun -np 5 ./2
+
+
+--------------------------------------------------------------------------------------------------
+
+Steps to perform this assignment - 
+
+Without installation
+
+1. Copy paste above code in notepad
+2. Save the code with name 2.c
+3. Open terminal
+4. Give command - 
+   mpicc 2.c -o 2
+   mpirun -np 5 ./2
+
+
+With installation
+
+sudo apt update
+sudo apt install openmpi-bin openmpi-common libopenmpi-dev
+mpicc -o codename codename.c
+mpirun -np 2 ./codename                            // Here 2 is the number of processes required 
+                                                      to run the code

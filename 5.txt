@@ -1,0 +1,83 @@
+5
+SimpleClient
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class SimpleClient {
+    public static void main(String[] args) {
+        try {
+            URL url = new URL("http://localhost:8080/books");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            System.out.println("Response from the server: " + response.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+Simple Web Service
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpExchange;
+import java.io.IOException;
+import java.io.OutputStream;
+
+public class SimpleWebService {
+    public static void main(String[] args) throws IOException {
+        HttpServer server = HttpServer.create(new java.net.InetSocketAddress(8080), 0);
+        server.createContext("/books", new BookHandler());
+        server.setExecutor(null); // creates a default executor
+        server.start();
+        System.out.println("Server started at http://localhost:8080/books");
+    }
+
+    static class BookHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String response = "[{\"id\":\"1\", \"title\":\"1984\", \"author\":\"George Orwell\"}," +
+                              "{\"id\":\"2\", \"title\":\"To Kill a Mockingbird\", \"author\":\"Harper Lee\"}]";
+            exchange.sendResponseHeaders(200, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
+    }
+}
+
+
+--------------------------------------------------------------------------------------------------
+
+Step 1: Install Java Development Kit (JDK) (If not installed)
+
+Ensure Java is installed on your system:
+
+sudo apt update
+sudo apt install openjdk-11-jdk
+
+java -version
+
+Step 2 - You need to save the provided code into two Java files:
+
+SimpleClient.java (for the client)
+SimpleWebService.java (for the server)
+
+Step 3 - Compile the files by opening one terminal. Use following command
+javac SimpleClient.java SimpleWebService.java
+
+Step 4 - Open second terminal and give command
+java SimpleWebService
+
+Step 5 - Open third terminal and give command
+java SimpleClient

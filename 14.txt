@@ -1,0 +1,77 @@
+linux@linux-ThinkCentre-M720s:~$ gedit degree.c
+
+code::
+#include <mpi.h>
+#include <stdio.h>
+#include <math.h>
+
+// Function to convert degrees to radians
+double degrees_to_radians(double degrees) {
+    return degrees * (M_PI / 180.0);
+}
+
+int main(int argc, char *argv[]) {
+    int world_rank, world_size;
+
+    // Initialize the MPI environment
+    MPI_Init(&argc, &argv);
+
+    // Get the rank of the process and the size of the communicator
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Ensure that there are at least 2 processes (client and server)
+    if (world_size < 2) {
+        fprintf(stderr, "World size must be greater than 1 for %s\n", argv[0]);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    if (world_rank == 0) {
+        // Client (Rank 0)
+        double degrees;
+
+        // Ask the user for input (angle in degrees)
+        printf("Client: Enter an angle in degrees: ");
+        scanf("%lf", &degrees);
+
+        // Send the degrees value to the server (Rank 1)
+        printf("Client sending angle: %.2f degrees\n", degrees);
+        MPI_Send(&degrees, 1, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+
+        // Receive the converted value (in radians) from the server
+        double radians;
+        MPI_Recv(&radians, 1, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        // Display the result
+        printf("Client received: %.2f degrees = %.2f radians\n", degrees, radians);
+    }
+    else if (world_rank == 1) {
+        // Server (Rank 1)
+        double degrees;
+
+        // Receive the degrees value from the client
+        MPI_Recv(&degrees, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Server received: %.2f degrees\n", degrees);
+
+        // Convert the angle from degrees to radians
+        double radians = degrees_to_radians(degrees);
+
+        // Send the converted value (in radians) back to the client
+        MPI_Send(&radians, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+    }
+
+    // Finalize the MPI environment
+    MPI_Finalize();
+    return 0;
+}
+
+
+linux@linux-ThinkCentre-M720s:~$ mpicc -o degree degree.c
+
+linux@linux-ThinkCentre-M720s:~$ mpirun -np 2 ./degree
+
+180
+Client: Enter an angle in degrees: Client sending angle: 180.00 degrees
+Client received: 180.00 degrees = 3.14 radians
+Server received: 180.00 degrees
+
